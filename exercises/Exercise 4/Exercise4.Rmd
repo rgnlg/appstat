@@ -1,0 +1,298 @@
+---
+title: "Exercise 4"
+author: "Noah Syrkis"
+date: "2/28/2021"
+output:
+  html_document: 
+    css: ~/Documents/ds/as/main.css
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Problems
+
+T=Theoretical Exercise,
+R=R Exercise
+
+
+# 1. (T)
+
+Consider the continuous random variable $X$ with the following probability density function
+$$
+f(x) = \begin{cases}
+0 & \text{if } x \leq 0 \\
+1/2 & \text{if } 0 \leq x \leq 1 \\
+1/6 & \text{if } 1 \leq x \leq 2
+\end{cases}
+$$
+
+a) Draw, with pen and paper, the probability density function of $X$, i.e. $f(x)$.
+
+$solution:$
+```{r}
+xs <- -1:3
+ys <- c(0, 3/4, 1/4, 0, 0)
+plot(xs, ys, type='s')
+```
+
+b) Determine the expression of the distribution function $F(x)$ of $X$, and draw it.
+
+$solution:$
+We know from page 59 (Dekking et al.) that $F(b) = P(X\leq b) = \int_{-\infty}^{b}$ and from aditivity of integrals that $\int_{a}^{b}f(x) \space\text{d}x = \int_{a}^{c}f(x)\space\text{d}x + \int_{c}^{b}f(x)\space\text{d}x$ where $c \in [a, b]$. This, along with the knowledge of the domain being between $0$ and $2$, we use to determine $F(x)$. We know its value in the interval $]-\infty, 0]$ and $[2, \infty[$. We must thus determine its value between $[0, 1]$ and $[1, 2]$
+for $[0,1]$:
+$$
+F(b) = \int_{0}^{1}3/4\space\text{d}x = \frac{3\cdot x}{4}
+$$
+For $[1, 2]$:
+$$
+F(b) = \int_{0}^{2}f(x)\space\text{d}x = \frac{3}{4}+\int_{1}^{2}1/4\space\text{d}x\\
+= \frac{3}{4} + \frac{x}{4} - \frac{1}{4} = \frac{2+x}{4}
+$$
+So we get that:
+$$
+f(x) = \begin{cases}
+0 & \text{if } x \leq 0 \\
+\frac{3\cdot x}{4} & \text{if } 0 \leq x \leq 1 \\
+\frac{2+x}{4} & \text{if } 1 \leq x \leq 2 \\
+1 & \text{if } x > 2
+\end{cases}
+$$
+```{r}
+xs <- -1:3
+ys <- c(0, 3/4, 4/4, 1, 1)
+plot(xs, ys, type='l')
+```
+
+# 2. (T)
+The following exercises are about cumulative distribution functions and probability distribution funcions.
+
+a) Let $X$ be a random variable with a $Exp(0.2)$ exponential distribution. Compute $P(X > 5.5)$.
+
+$solution:$
+
+Distribution function of $X$ is given by $F(x) = 1 - e^{-\lambda x}$ for $x\geq0$. cf. page 62 (Dekking et al.). Since $1-F(X\leq x) = F(X>x)$, then $P(X>5.5) = 1-(1-e^{-0.2\cdot5.5}) = e^{-1.1}$
+
+``` {r}
+1 - pexp(5.5, 0.2)
+```
+ro
+
+b) Let $X$ be a random variable with a $N(0,1)$ normal distribution. Compute $P(-0.2 < X < 0.4)$. You can use the table at the end of the book. 
+In this case, note that the distribution $N(0,1)$ is symmetric around 0; use this fact to your advantage when you use the table.
+
+$solution:$
+The area under the curve between $-0.2$ and $0.4$ is given by $F(0.4) - F(-0.2)$. The table on page 432 (Dekking et al.) can be used so as to avoid actually calculating the integrals:
+``` {r}
+pnorm(0.4) - pnorm(-0.2)
+```
+
+
+c) Consider the standard normal distribution, i.e. $N(0,1)$. What is the 15th percentile of this distribution?
+(Note that this is equivalent to the 0.15 quantile.)
+
+$solution:$
+the 15th percentile $q_{15}$ is given by $\Phi(q_{15})$ = 0.15. The table only shows the right tale. We see that $1.03 < \Phi(q_{85}) < 1.04$. From this it follows that $-1.04 < \Phi(q_{15}) < -1.03$. This is confirmed by R:
+
+```{r}
+qnorm(0.15)
+```
+
+
+# 3. (T)
+Consider a random variable $X$ with uniform distribution $U(0,1)$. In class we have seen how this can be used to simulate the flip of a coin.
+
+$solution:$
+```{r}
+X <- function() {
+   return(runif(1))
+}
+```
+
+
+a) Use the random variable $X$ to simulate the rolls of a dice with 4 faces, similarity to what we did in class. Each of the possible outcomes ${1, 2, 3, 4}$ must have equal probability.
+
+$solution:$
+```{r}
+die <- function(x) {
+   if (x < 0.25) {x <- 1}
+   else if (x < 0.5) {x <- 2}
+   else if (x < 0.75) {x <- 3}
+   else {x <- 4}
+   return(x)
+}
+```
+
+
+b) Consider the random variable $Y = \lfloor 4X + 1 \rfloor$. That is, we take a random number generated according to the distribution of X, we multiply it by 4, we add 1, and we round it down to the nearest integer. What are the possible outcomes of Y ? What is the probability of each of these outcomes? Discuss the relationship between Y and the random variable you built in point (a).
+
+$solution:$
+Possible outcomes for $Y$ is $1,2,3,4,5$. $5$ occurs when $X$ is 1, which  in turn occurs with probability zero. Thus $P(X=k) = \frac{1}{4}$ $k\in{1,2,3,4}$ and $P(X=5) = 0$.
+```{r}
+Y <- function(x) {
+   return(floor(4*x + 1))
+}
+```
+
+# 4. (R)
+This exercise introduces some random number generation facilities of R. As we saw in the last exercise session, in R there are several functions related to distributions: the names of such functions follow the pattern `xdistname`, where `distname` is the name of the distribution (e.g. geom, norm, binom. . . ), and the prefix `x` is one of `d`, `p`, `q`, and `r`, with the following meaning:
+
+* `d` gives the value of the probability mass function (or the probability distribution function in the case of continuous random variables)
+
+* `p` gives the value of the cumulative distribution function
+
+* `q` returns quantiles
+
+* `r` returns a number sampled from the distribution
+
+For simulation we are often interested in the last version of the function, the one prefixed with `r`. For instance, to generate numbers distributed according to the normal distribution, we use the function `rnorm`.
+```{r}
+n <- 100
+samples <- rnorm(n)
+```
+
+We can visualize how the sampled points are distributed using a *histogram*, which is a plot comprised of several columns: the height of each column is proportional to the number of points falling into the corresponding interval. To plot the histogram of a vector samples, you just need to call `hist(samples)`. In the following, the questions you have to answer with your R code are in *italic* font.
+
+a) In a code block in your Rmarkdown file, define a variable `n` as above and sample `n` points using the rnorm distribution. *Then, plot the result using the hist function.* You can look up the documentation of any function in the help panel on the right of the RStudio window. *Does running the code block more than once change the result?*
+
+$solution:$
+```{r}
+n <- 1000
+p <- rnorm(n)
+hist(p)
+```
+
+
+b) The `hist` function takes several parameters. Among these, there is one called `freq`. Setting `freq = TRUE` does not change the output with respect to the default: the height of each column is still proportional to the overall count of points falling into each interval. Setting it to `FALSE` (as in `hist(samples, freq = FALSE)`) rescales the columns: each column is rescaled so that the sum of the areas of the columns is equal to 1. *Try to change the parameter and observe how the output plot changes.*
+
+$solution:$
+```{r}
+p <- rnorm(n)
+hist(p, freq = FALSE)
+```
+
+
+c) When `freq=FALSE`, we have that the total area of the rectangles is 1. This sounds similar to the definition of probability density function (page 57 in Dekking et al.), doesn't it? Let’s try to overlay the plot of the probability density function (PDF) of a $N(0,1)$ random variable on top of our histogram. We can use the `dnorm(xs)` function to get the values of the (PDF) of the normal distribution corresponding to values `xs`. These values `xs` should approximately comprise the values we see on the `x`-axis of the histogram we plotted previously, and should have a fine enough resolution to be useful to plot a smooth curve of the PDF. A vector `xs` with these characteristics can be built using the following code
+```{r}
+xs <- -30:30 / 10
+xs
+```
+
+As you can see, the resulting vector ranges from -3 to 3 with increments of 0.1. *Using this vector `xs` as the input to the function `dnorm`, get the values of the probability distribution function, and plot them using the `lines` function.*
+
+$solution:$
+```{r}
+hist(rnorm(n), freq = FALSE)
+ys <- dnorm(xs)
+lines(xs, ys)
+```
+
+
+d) To overlay the theoretical distribution and the histogram in the same plot, simple place the calls to hist and lines one after the other in the same code block. *Do this plot: is the histogram similar to the theoretical distribution function? Change the value n you defined earlier to some larger value. How does the plot change?* Bear in mind that if you defined the variable n in a different code block, you will need to re-execute it before running the block containing the plotting code. Just to be sure, you can re-execute all the code blocks.
+
+$solution:$
+```{r}
+n <- 10000
+hist(rnorm(n), freq = FALSE)
+ys <- dnorm(xs)
+lines(xs, ys)
+```
+
+
+e) Re-evaluating the code blocks many times is cumbersome and error prone. It is way better to define a function that takes as a parameter the number of samples you want, and encapsulates all the sampling and plotting code. Such a function in R can be defined as follows
+
+```{r}
+ sample.and.plot.norm <- function(n) { 
+   samples <- rnorm(n) 
+   hist(samples, freq=FALSE)
+   xs <- -30:30 / 10
+   p <- dnorm(xs)
+   lines(xs, p)
+ }
+```
+
+And then can be called, even in another code block
+
+```{r eval=FALSE}
+sample.and.plot.norm(100)
+```
+*Define a function encapsulating your code, and call it several times with different parameters. Do you get plots similar to the ones you were getting before?*
+
+$solution:$
+```{r}
+sample.and.plot.norm <- function(n) { 
+   hist(rnorm(n), freq = FALSE)
+   ys <- dnorm(xs)
+   lines(xs, ys)
+}
+for (n in c(1000, 4000)) {
+   sample.and.plot.norm(n)
+}
+```
+
+
+# 5. (R)
+In this exercise, you will produce a plot similar to the previous exercise, but relative to the exponential distribution.
+
+a) Write a function `sample.and.plot.exp` that takes the number of samples `n` as a parameter. In the body of the function, add code to 
+* Sample `n` numbers from the exponential distribution with parameter $\lambda$ = 1.
+* Plot the histogram of the sampled numbers
+* Overlay the plot of the exponential probability distribution function to the histogram.
+
+$solution:$
+```{r}
+sample.and.plot.exp <- function(n) {
+   hist(rexp(n), freq = FALSE)
+   ys <- dexp(xs)
+   lines(xs, ys)
+}
+sample.and.plot.exp(1000)
+```
+
+
+b) Call the function sample.and.plot.exp with several different values of n. How does it change the appearance of the plot?
+
+$solution:$
+```{r}
+for (n in c(1000, 4000)) {
+   sample.and.plot.exp(n)
+}
+```
+
+
+# 6. (R) 
+Let $X$ be a continuous random variable with the probability density function
+$$
+f(x) = \begin{cases}
+2x & \text{if } 0 \leq x \leq 1 \\
+0 & \text{otherwise.} \\
+\end{cases}
+$$
+
+a) Derive the distribution function of $f(x)$.
+
+$solution:$
+In its domain, $f(x) = 2x$ integrates to $F(x) = x^2$
+
+b) Describe the principle how you can simulate the random variables following the probability density $f(x)$ when you have an access to a random number generator of uniformly distributed random numbers. 
+
+$solution:$
+We could use $U(0,1)$ to acquire random points on the $y$-axis and output the corresponding $x$-value for $F(x)$.
+
+
+c) Write a program that uses stochastic simulation to draw 100 independent samples from $f(x)$.
+
+```{r}
+sampler <- function() {
+   return(runif(1) ** (1/2))
+}
+
+samples <- c()
+
+for (i in 1:10000) {
+   samples <- c(samples, sampler())
+}
+
+hist(samples)
+```

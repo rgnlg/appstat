@@ -1,0 +1,224 @@
+---
+title: "Exercise 11"
+subtitle: "Applied Statistics 2019, IT University of Copenhagen"
+output:
+  pdf_document: default
+documentclass: article
+classoption: a4paper
+---
+
+# Preparation
+
+* Read pages 294--302 from @Verzani2014.
+
+# Problems
+
+```{r, message=FALSE, include=FALSE}
+require(UsingR)
+```
+
+## 1. Born Babies (T)
+
+On average, the number of babies born in Cleveland, Ohio, in the month of September is 1472. On January 26, 1977 the city was immobilied by a blizzard. Nine months later, in September 1977, the recorded number of births was 1718. Can the increase of 246 be attributed to chance? To investigate this, the number of births in the month of September is modelled by a Poisson distributed random variable $T$ with parameter $\mu$, and we test $H_0:\  \mu=1472$. 
+
+(a) What would you choose as the alternative hypothesis?
+
+*Solution:* We would assume the number of babies born in September would resemble the usual (the average which is higher), therefore our alternative hypothesis will be $H_1 : \mu > 1472$.
+
+
+(b) In which direction do values of $T$ provide evidence against $H_0$ (and in favour of $H_1$)?
+
+*Solution:* Because $T$ has a $Pois(\mu)$ distribution, we have $E[T] = \mu$, hence values of $T$ much larger than 1472 suggest $\mu > 1472$. Since we're testing $H_0 : \mu = 1472$ against $H_1 : \mu > 1472$, the more values of $T$ are to the right, the stronger evidence they provide in favor of $H_1$ (and against $H_0$).
+
+
+(c) Compute the $p$-value corresponding to $t=1718$.
+
+*Solution:* Values to the right of $t=1718$ bare stronger evidence in favor of $H_1$. Therefore, the $p$-value is $P(T \geq 1718)$, where $T$ has a Poisson distribution with $\mu=1472$. Using the provided hint, we can approximate this probability as $P(T \geq 1718)$ assuming $T$ follows the normal distribution $N(1472, 1472)$. We can calculate this with
+
+```{r}
+pnorm(1718, 1472, sqrt(1472), lower.tail = FALSE)
+```
+
+So the $p$-value is $7.2 \cdot 10^{-11}$.
+
+
+(d) What is your conclusion about whether the increase in births was attributed to chance?
+
+*Solution:* The (very) small $p$-value indicates that something significant must have happened that attributed to the increase in the birthrate, i.e. the blizzard.
+
+Hint: you may use the fact that the Poisson distribution of $T$ can be approximated by an $N(\mu,\mu)$ distribution. 
+
+
+## 2. Type I and II errors (T)
+
+Let $T$ be a random variable following an $N(\mu,1)$ distribution. Assume testing the hypothesis $H_0: \mu=0$ against the alternative hypothesis $H_1: \mu \neq 0$ using the test statistic $T$.
+
+(a) With the decision to reject the null hypothesis if the realisation $|t|>1$ what is the probability of committing a type I error?
+
+*Solution:* By page 378 (Dekking et al.), a type I error is when you falsely reject the null hypothesis. Hence, we have to calculate the probability of rejecting the null hypothesis when it's true, which is the probability that the realization $|t| > 1$ when $\mu = 0$. Since $T \sim N(\mu, 1)$, we want to calculate
+
+\begin{align}
+P(|T| > 1) &= P(T < -1) + P(T > 1) \\
+&= 2P(T < -1) = 2P(T > 1). \quad \text{symmetry of normal distribution}
+\end{align}
+
+Using R we get
+
+```{r}
+2*pnorm(-1, 0, sqrt(1))
+2*pnorm(1, 0, sqrt(1), lower.tail = FALSE)
+```
+
+
+(b) Assuming that the true value of $\mu$ is 1, what is the probability of committing a type II error? 
+
+*Solution:* By page 378 (Dekking et al.), a type II error is when you falsely do **not** reject the null hypothesis. In our case, we have to calculate the probability of not rejecting the null hypothesis given that $\mu = 1$, i.e. the probability that the realization $|t| \leq 1$. Since $T \sim N(\mu, 1)$, we want to calculate, we want to calculate
+
+\begin{align}
+P(|T| \leq 1) &= P(-1 \leq T \leq 1) \\
+&= P(T \leq 1) - P(T \leq -1).
+\end{align}
+
+Using R we get
+
+```{r}
+pnorm(1, 1, sqrt(1)) - pnorm(-1, 1, sqrt(1))
+```
+
+
+## 3. Coin flipping (T)
+
+Assume that you flipped a coin $N=11$ times. You got tails 7 times and heads 4 times, after which the coin fell into a well and you lost it. After the experiment you started to wonder whether the coin was fair. 
+
+(a) Formulate test statistic, the null hypothesis and alternative hypothesis for testing the fairness of the coin. 
+
+*Solution:* Let $X \sim Bin(N, p)$ be the Binomial random variable that models the number of heads seen in $N=11$ coin flips, where the probability of heads is $p$. We use $X$ as the test statistic, and we would like to find out whether $p$ differs from $\frac{1}{2}$, i.e. whether the coin is fair or not. The null hypothesis is therefore $H_0 : p = \frac{1}{2}$, and the alternative hypothesis is $H_1 : p \not = \frac{1}{2}$.
+
+
+(b) Was the coin fair? Assume 0.05 risk level.
+
+*Solution:* Assuming a risk level of 0.05 means that
+
+\begin{align}
+P(X \leq c_l | p=\frac{1}{2}) \leq 0.025 \quad P(X \geq c_r | p=\frac{1}{2}) \leq 0.025,
+\end{align}
+
+where $c_l$ and $c_r$ denote the left and right critical boundary values, i.e. where we will reject $H_0$ in favor of $H_1$. In our case, we saw 4 heads, which is lower than the expected value assuming $H_0$ is true, hence we are interested in finding $c_l$.
+
+```{r}
+N = 11
+p = 1/2
+for (x in seq(0, 11)){
+  str <- sprintf("Heads: %d | prob: %.4f", x, pbinom(x, size=N, prob=p))
+  print(str)
+}
+```
+
+As we can see, $c_l = 1$ is the largest value such that $P(X \leq c_l | p=\frac{1}{2}) \leq 0.025$, so the coin is fair.
+
+
+## 4. Insurance (R)
+
+In the United States in 1998, the proportion of adults age 21–24 who had no
+medical insurance was 34.4 percent, according to the Employee Benefit Research
+Institute. A survey of 75 recent college graduates in this age range finds that 40 are
+without insurance. Does this support a difference from the nationwide proportion?
+Perform a test of significance and report the $p$-value. Is it significant?
+
+*Solution:* Following pages 300-302 (Verzani), we have
+
+```{r}
+phat <- 40/75
+p0 <- 0.344
+n <- 75
+SD <- sqrt(p0 * (1-p0)/n)
+pnorm(phat, mean=p0, sd=SD, lower.tail=FALSE)*2
+```
+
+Using `prop.test` we can get also find the $p$-value
+
+```{r}
+prop.test(40, 75, 0.344, 'two.sided', correct=FALSE)$p.value
+```
+
+This value is assuming our sample is large enough to be approximated by a normal distribution. The actual value is
+
+```{r}
+pbinom(40, size=75, prob=0.344, lower.tail = FALSE)*2
+```
+
+Commonly, the significance value used is 0.05, which makes our result statistically significant, i.e. the survey supports a diffference from the nationwide proportion.
+
+
+##  5. Highway Toll (R)
+
+On a number of highways a toll is collected for permission to travel on the
+roadway. To lessen the burden on drivers, electronic toll-collection systems are often
+used. An engineer wishes to check the validity of one such system. She arranges to
+survey a collection unit for single day, finding that of 5,760 transactions, the system
+accurately read 5,731. Perform a one-sided significance test to see if this is consistent
+with a 99.9% accuracy rating at the 0.05 significance level. (Do you have any doubts that
+the normal approximation to the binomial distribution should apply here?)
+
+*Solution:* We can follow the same procedure as the last problem, except that this time we are only testing whether the survey shows a statistically significant accuracy **less** than the supposed 0.999 accuracy.
+
+```{r}
+phat <- 5731/5760
+p0 <- 0.999
+n <- 5760
+SD <- sqrt(p0 * (1-p0)/n)
+pnorm(phat, mean=p0, sd=SD)
+```
+
+Using `prop.test` we can get also find the $p$-value
+
+```{r}
+prop.test(5731, 5760, 0.999, 'less', correct=FALSE)$p.value
+```
+
+This value is assuming our sample is large enough to be approximated by a normal distribution. The actual value is
+
+```{r}
+pbinom(5731, size=5760, prob=0.999)
+```
+
+All values are much lower than the significance level of 0.05. This rejects the null hypothesis that the surveyed accuracy is the same as the supposed 0.999. While the $p$-value of the normal approximation is very different from the actual, they are both much lower than the significance level - also, the sample size (5760) is fairly large, making the normal approximation decent. However, it illustrates the disparity between the approximation and the actual value.
+
+Using the `binom.test` is therefore preferable, since it's just as easy.
+
+```{r}
+binom.test(5731, 5760, 0.999, 'less')$p.value
+```
+
+## 6. Car Problems (R)
+
+Historically, a car from a given company has a 10% chance of having a significant
+mechanical problem during its warranty period. A new model of the car is being sold. Of
+the first 25,000 sold, 2,700 have had an issue. Perform a test of significance to see
+whether the proportion of these new cars that will have a problem is more than 10%.
+What is the p-value?
+
+*Solution:* We can follow the same procedure as the last problem, except that this time we are only testing whether the propotion of sold cars with issues is **greater** than the supposed 0.1
+
+```{r}
+phat <- 2700/25000
+p0 <- 0.1
+n <- 25000
+SD <- sqrt(p0 * (1-p0)/n)
+pnorm(phat, mean=p0, sd=SD, lower.tail=FALSE)
+```
+
+Using `prop.test` we can get also find the $p$-value
+
+```{r}
+prop.test(2700, 25000, 0.1, 'greater', correct=FALSE)$p.value
+```
+
+This value is assuming our sample is large enough to be approximated by a normal distribution. The actual $p$-value is
+
+```{r}
+pbinom(2700, size=25000, prob=0.1, lower.tail=FALSE)
+```
+
+The $p$-value is about 0.0000145.
+
